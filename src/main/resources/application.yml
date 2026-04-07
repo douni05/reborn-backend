@@ -1,15 +1,22 @@
 spring:
   datasource:
+    # 1. 6543 포트(Transaction Pooler)와 prepareThreshold=0 파라미터를 사용합니다.
     url: jdbc:postgresql://aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?prepareThreshold=0
-    username: postgres
-    password: jimmyreborn44**
+
+    # 2. 핵심: 아이디 뒤에 반드시 점(.)과 프로젝트 ID를 붙여야 인증 에러가 나지 않습니다.
+    username: postgres.hxtdbbwfknqncekqdggq
+
+    # 3. 데이터베이스 비밀번호를 입력합니다.
+    password: jimmyreborn202444
     driver-class-name: org.postgresql.Driver
 
-    jpa:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
       hibernate:
-        ddl-auto: update
-      show-sql: true
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
-          format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 메타데이터 조회 시 발생하는 인증 에러를 방지합니다.
+        temp.use_jdbc_metadata_defaults: false
+        format_sql: true
