@@ -1,10 +1,12 @@
 package com.jimmy.reborn_backend.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class AnalysisRequestDto {
-    private String originImgUrl; // 사용자가 업로드한 이미지 경로
+    private String label; // FastAPI의 LabelRequest와 이름을 똑같이 'label'로 맞춰야 합니다.
 }

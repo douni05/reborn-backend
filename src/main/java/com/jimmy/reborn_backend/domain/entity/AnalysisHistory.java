@@ -18,4 +18,7 @@ public class AnalysisHistory extends BaseTimeEntity {
     private String materialType;
     private String conditionGrade;
     private Boolean isReformable;
+
+    @Column(columnDefinition = "TEXT")
+    private String reformPlan;
 }

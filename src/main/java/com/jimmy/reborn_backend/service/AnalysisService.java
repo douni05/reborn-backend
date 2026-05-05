@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,30 +28,35 @@ public class AnalysisService {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        // 2. FastAPI 서버로 분석 요청 (실제 FastAPI 주소 필요)
-        // String fastapiUrl = "http://localhost:8000/analyze";
-        // AIResult aiResult = restTemplate.postForObject(fastapiUrl, dto, AIResult.class);
+        // 2. FastAPI 서버 주소 업데이트 (v2 엔드포인트)
+        String fastapiUrl = "http://127.0.0.1:8000/analyze-v2";
 
-        // 3. (테스트용) 가짜 AI 분석 결과 생성
-        boolean isReformable = true; // AI가 판단했다고 가정
+        // 3. FastAPI로 보낼 데이터 구성 (안드로이드에서 받은 라벨 전달)
+        // FastAPI의 LabelRequest가 {"label": "..."} 형식을 기다리므로 Map을 활용해 맞춰줍니다.
+        Map<String, String> requestBody = Map.of("label", dto.getLabel());
 
-        // 4. 분석 이력 DB 저장
+        // 4. FastAPI 호출 및 결과 수신
+        Map<String, Object> aiResult = restTemplate.postForObject(fastapiUrl, requestBody, Map.class);
+
+        // 5. FastAPI(Gemini)가 준 데이터 꺼내기
+        String materialType = (String) aiResult.get("label"); // 인식된 물체 이름
+        String reformPlan = (String) aiResult.get("reformPlan"); // Gemini의 리폼 계획
+
+        // 6. 분석 이력 DB 저장
+        // Tip: AnalysisHistory 엔티티에 reformPlan(TEXT 타입) 필드가 없다면 추가해주는 것이 좋습니다!
         AnalysisHistory history = AnalysisHistory.builder()
                 .member(member)
-                .originImgUrl(dto.getOriginImgUrl())
-                .materialType("청바지") // AI 결과값
-                .conditionGrade("A")    // AI 결과값
-                .isReformable(isReformable)
+                .materialType(materialType)
+                .reformPlan(reformPlan) // Gemini가 준 상세 가이드 저장
                 .build();
 
         AnalysisHistory savedHistory = analysisHistoryRepository.save(history);
 
-        // 5. 결과 반환
+        // 7. 프론트엔드로 최종 결과 반환
         return AnalysisResponseDto.builder()
                 .analysisId(savedHistory.getAnalysisId())
                 .materialType(savedHistory.getMaterialType())
-                .conditionGrade(savedHistory.getConditionGrade())
-                .isReformable(savedHistory.getIsReformable())
+                .reformPlan(savedHistory.getReformPlan()) // 안드로이드에 리폼 계획 전달
                 .build();
     }
 }
