@@ -21,4 +21,10 @@ public class AnalysisHistory extends BaseTimeEntity {
 
     @Column(columnDefinition = "TEXT")
     private String reformPlan;
+
+    private String reformTitle;
+    private String difficulty;
+    private String materials;
+    private String estimatedTime;
+    private String estimatedCost;
 }

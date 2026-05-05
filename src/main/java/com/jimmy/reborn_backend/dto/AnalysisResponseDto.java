@@ -6,9 +6,21 @@ import lombok.Getter;
 @Getter
 @Builder
 public class AnalysisResponseDto {
+
     private Long analysisId;
-    private String materialType;   // AI 분석 재질 (예: 청바지) [cite: 166]
-    private String conditionGrade; // 상태 등급 (예: A, B)
-    private Boolean isReformable;  // 리폼 가능 여부
+    private String materialType;
+    private String conditionGrade;
+    private Boolean isReformable;
+
+    // 리폼 가능할 때
+    private String reformTitle;
     private String reformPlan;
+    private String difficulty;
+    private String materials;
+    private String estimatedTime;
+    private String estimatedCost;
+
+    // 리폼 불가능할 때 — 분리배출 정보
+    private String disposalIcon;
+    private String disposalMethod;
 }

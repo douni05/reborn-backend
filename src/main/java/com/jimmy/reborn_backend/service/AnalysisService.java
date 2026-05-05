@@ -1,62 +1,139 @@
 package com.jimmy.reborn_backend.service;
 
 import com.jimmy.reborn_backend.domain.entity.AnalysisHistory;
+import com.jimmy.reborn_backend.domain.entity.DisposalGuide;
 import com.jimmy.reborn_backend.domain.entity.Member;
 import com.jimmy.reborn_backend.domain.repository.AnalysisHistoryRepository;
+import com.jimmy.reborn_backend.domain.repository.DisposalGuideRepository;
 import com.jimmy.reborn_backend.domain.repository.MemberRepository;
 import com.jimmy.reborn_backend.dto.AnalysisRequestDto;
 import com.jimmy.reborn_backend.dto.AnalysisResponseDto;
+import com.jimmy.reborn_backend.dto.FastApiResponseDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AnalysisService {
 
     private final AnalysisHistoryRepository analysisHistoryRepository;
+    private final DisposalGuideRepository disposalGuideRepository;
     private final MemberRepository memberRepository;
+    private final XpService xpService;
     private final RestTemplate restTemplate;
+
+    private static final String FASTAPI_URL = "http://127.0.0.1:8000/analyze-v2";
 
     @Transactional
     public AnalysisResponseDto analyzeClothing(Long userId, AnalysisRequestDto dto) {
+
         // 1. 사용자 조회
         Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("존재하지 않는 유저예요. id=" + userId));
 
-        // 2. FastAPI 서버 주소 업데이트 (v2 엔드포인트)
-        String fastapiUrl = "http://127.0.0.1:8000/analyze-v2";
+        // 2. FastAPI 호출
+        FastApiResponseDto aiResult = callFastApi(dto.getLabel());
 
-        // 3. FastAPI로 보낼 데이터 구성 (안드로이드에서 받은 라벨 전달)
-        // FastAPI의 LabelRequest가 {"label": "..."} 형식을 기다리므로 Map을 활용해 맞춰줍니다.
-        Map<String, String> requestBody = Map.of("label", dto.getLabel());
+        // 3. 분리배출 정보 조회
+        String materialType = aiResult.getMaterialType() != null
+                ? aiResult.getMaterialType().toLowerCase()
+                : "default";
 
-        // 4. FastAPI 호출 및 결과 수신
-        Map<String, Object> aiResult = restTemplate.postForObject(fastapiUrl, requestBody, Map.class);
+        DisposalGuide guide = disposalGuideRepository
+                .findByMaterialType(materialType)
+                .orElseGet(() -> disposalGuideRepository
+                        .findByMaterialType("default")
+                        .orElse(null));
 
-        // 5. FastAPI(Gemini)가 준 데이터 꺼내기
-        String materialType = (String) aiResult.get("label"); // 인식된 물체 이름
-        String reformPlan = (String) aiResult.get("reformPlan"); // Gemini의 리폼 계획
-
-        // 6. 분석 이력 DB 저장
-        // Tip: AnalysisHistory 엔티티에 reformPlan(TEXT 타입) 필드가 없다면 추가해주는 것이 좋습니다!
+        // 4. 분석 이력 저장
         AnalysisHistory history = AnalysisHistory.builder()
                 .member(member)
-                .materialType(materialType)
-                .reformPlan(reformPlan) // Gemini가 준 상세 가이드 저장
+                .materialType(aiResult.getMaterialType())
+                .conditionGrade(aiResult.getConditionGrade())
+                .isReformable(aiResult.getIsReformable())
+                .reformPlan(aiResult.getReformPlan())
+                .reformTitle(aiResult.getReformTitle())
+                .difficulty(aiResult.getDifficulty())
+                .materials(aiResult.getMaterials())
+                .estimatedTime(aiResult.getEstimatedTime())
+                .estimatedCost(aiResult.getEstimatedCost())
                 .build();
 
-        AnalysisHistory savedHistory = analysisHistoryRepository.save(history);
+        AnalysisHistory saved = analysisHistoryRepository.save(history);
 
-        // 7. 프론트엔드로 최종 결과 반환
+        // 5. XP 적립
+        xpService.addXpForAnalysis(userId);
+
+        // 6. 응답 구성
+        boolean isReformable = Boolean.TRUE.equals(aiResult.getIsReformable());
+
         return AnalysisResponseDto.builder()
-                .analysisId(savedHistory.getAnalysisId())
-                .materialType(savedHistory.getMaterialType())
-                .reformPlan(savedHistory.getReformPlan()) // 안드로이드에 리폼 계획 전달
+                .analysisId(saved.getAnalysisId())
+                .materialType(aiResult.getMaterialType())
+                .conditionGrade(aiResult.getConditionGrade())
+                .isReformable(isReformable)
+                .reformTitle(isReformable ? aiResult.getReformTitle() : null)
+                .reformPlan(isReformable ? aiResult.getReformPlan() : null)
+                .difficulty(isReformable ? aiResult.getDifficulty() : null)
+                .materials(isReformable ? aiResult.getMaterials() : null)
+                .estimatedTime(isReformable ? aiResult.getEstimatedTime() : null)
+                .estimatedCost(isReformable ? aiResult.getEstimatedCost() : null)
+                .disposalIcon(!isReformable && guide != null ? guide.getCategoryIcon() : null)
+                .disposalMethod(!isReformable && guide != null ? guide.getDischargeMethod() : null)
                 .build();
+    }
+
+    public List<AnalysisResponseDto> getHistory(Long userId) {
+        return analysisHistoryRepository.findAllByMember_UserId(userId)
+                .stream()
+                .map(h -> AnalysisResponseDto.builder()
+                        .analysisId(h.getAnalysisId())
+                        .materialType(h.getMaterialType())
+                        .conditionGrade(h.getConditionGrade())
+                        .isReformable(h.getIsReformable())
+                        .reformTitle(h.getReformTitle())
+                        .reformPlan(h.getReformPlan())
+                        .difficulty(h.getDifficulty())
+                        .build())
+                .toList();
+    }
+
+    private FastApiResponseDto callFastApi(String label) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, String> body = Map.of("label", label);
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
+
+            ResponseEntity<FastApiResponseDto> response = restTemplate.exchange(
+                    FASTAPI_URL,
+                    HttpMethod.POST,
+                    request,
+                    FastApiResponseDto.class
+            );
+
+            log.info("FastAPI 응답: {}", response.getBody());
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.warn("FastAPI 호출 실패, fallback 사용. label={}, error={}",
+                    label, e.getMessage());
+            return new FastApiResponseDto(
+                    label, "알 수 없음", "B", false,
+                    "step1: 재질을 확인하세요\nstep2: 해당 분리배출함에 배출하세요",
+                    "Normal"
+            );
+        }
     }
 }

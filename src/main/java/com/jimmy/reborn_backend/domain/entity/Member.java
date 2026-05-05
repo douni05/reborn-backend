@@ -17,10 +17,25 @@ public class Member extends BaseTimeEntity {
     @Column(unique = true, nullable = false)
     private String nickname;
 
+
     @Builder.Default private Integer totalXp = 0;
     @Builder.Default private Integer currentLevel = 1;
     @Builder.Default private Integer totalReformCount = 0;
     @Builder.Default private Integer totalDisposalCount = 0;
     @Builder.Default private Float carbonReduction = 0.0f;
     private String role; // USER, EXPERT
+
+    public void updateXpAndLevel(int totalXp, int currentLevel) {
+        this.totalXp = totalXp;
+        this.currentLevel = currentLevel;
+    }
+
+    public void incrementReformCount() {
+        this.totalReformCount += 1;
+    }
+
+    public void incrementDisposalCount() {
+        this.totalDisposalCount += 1;
+    }
 }
+
