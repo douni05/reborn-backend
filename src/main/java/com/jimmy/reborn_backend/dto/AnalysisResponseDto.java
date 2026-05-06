@@ -13,6 +13,7 @@ public class AnalysisResponseDto {
     private Boolean isReformable;
 
     // 리폼 가능할 때
+    private Long planId;
     private String reformTitle;
     private String reformPlan;
     private String difficulty;
