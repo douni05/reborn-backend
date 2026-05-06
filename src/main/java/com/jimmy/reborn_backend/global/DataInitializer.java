@@ -1,6 +1,8 @@
 package com.jimmy.reborn_backend.global;
 
+import com.jimmy.reborn_backend.domain.entity.Achievement;
 import com.jimmy.reborn_backend.domain.entity.DisposalGuide;
+import com.jimmy.reborn_backend.domain.repository.AchievementRepository;
 import com.jimmy.reborn_backend.domain.repository.DisposalGuideRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
@@ -12,9 +14,15 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements ApplicationRunner {
 
     private final DisposalGuideRepository disposalGuideRepository;
+    private final AchievementRepository achievementRepository;
 
     @Override
     public void run(ApplicationArguments args) {
+        seedDisposalGuides();
+        seedAchievements();
+    }
+
+    private void seedDisposalGuides() {
         if (disposalGuideRepository.count() > 0) return;
 
         disposalGuideRepository.save(DisposalGuide.builder()
@@ -49,5 +57,20 @@ public class DataInitializer implements ApplicationRunner {
                 .materialType("default").categoryIcon("🗑️")
                 .dischargeMethod("재질 확인 후 해당 분리배출 방법에 따라 배출하세요.")
                 .build());
+    }
+
+    private void seedAchievements() {
+        if (achievementRepository.count() > 0) return;
+
+        achievementRepository.save(Achievement.builder()
+                .levelThreshold(1).titleName("새싹 지구 지킴이").iconUrl("🌱").build());
+        achievementRepository.save(Achievement.builder()
+                .levelThreshold(6).titleName("주니어 리포머").iconUrl("🌿").build());
+        achievementRepository.save(Achievement.builder()
+                .levelThreshold(16).titleName("프로 환경러").iconUrl("🌸").build());
+        achievementRepository.save(Achievement.builder()
+                .levelThreshold(31).titleName("에코 마스터").iconUrl("🌳").build());
+        achievementRepository.save(Achievement.builder()
+                .levelThreshold(50).titleName("지구 수호자").iconUrl("👑").build());
     }
 }

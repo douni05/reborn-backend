@@ -78,7 +78,8 @@ public class AnalysisService {
             planId = plan.getPlanId();
         }
 
-        xpService.addXpForAnalysis(userId);
+        boolean isFirst = analysisHistoryRepository.countByMember_UserId(userId) == 1;
+        xpService.addXpForAnalysis(userId, isFirst);
 
         return AnalysisResponseDto.builder()
                 .analysisId(saved.getAnalysisId())

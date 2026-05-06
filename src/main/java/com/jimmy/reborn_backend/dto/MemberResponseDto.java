@@ -13,5 +13,6 @@ public class MemberResponseDto {
     private Integer currentLevel;
     private Integer totalReformCount;
     private Integer totalDisposalCount;
+    private String titleName;
     private List<AchievementResponseDto> achievements;
 }

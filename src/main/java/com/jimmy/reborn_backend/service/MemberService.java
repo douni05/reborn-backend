@@ -4,6 +4,7 @@ import com.jimmy.reborn_backend.domain.entity.Achievement;
 import com.jimmy.reborn_backend.domain.entity.Member;
 import com.jimmy.reborn_backend.domain.repository.AchievementRepository;
 import com.jimmy.reborn_backend.domain.repository.MemberRepository;
+import com.jimmy.reborn_backend.domain.repository.ServiceMatchRepository;
 import com.jimmy.reborn_backend.dto.AchievementResponseDto;
 import com.jimmy.reborn_backend.dto.JoinResponseDto;
 import com.jimmy.reborn_backend.dto.MemberRequestDto;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,6 +24,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final AchievementRepository achievementRepository;
+    private final ServiceMatchRepository serviceMatchRepository;
     private final JwtUtil jwtUtil;
 
     @Transactional
@@ -53,17 +56,49 @@ public class MemberService {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저예요."));
 
-        List<AchievementResponseDto> achievements = achievementRepository.findAll()
-                .stream()
-                .filter(a -> a.getLevelThreshold() <= member.getCurrentLevel())
-                .map(this::toAchievementDto)
-                .toList();
+        String titleName = XpService.getTitleForLevel(member.getCurrentLevel());
+
+        // 레벨 기반 업적 (달성한 칭호 전환 마일스톤)
+        List<AchievementResponseDto> achievements = new ArrayList<>(
+                achievementRepository.findAll()
+                        .stream()
+                        .filter(a -> a.getLevelThreshold() <= member.getCurrentLevel())
+                        .map(this::toAchievementDto)
+                        .toList()
+        );
+
+        // 특별 업적 (조건 기반 동적 체크)
+        if (member.getTotalReformCount() >= 10) {
+            achievements.add(AchievementResponseDto.builder()
+                    .titleName("패션 아이콘")
+                    .iconUrl("🏆")
+                    .build());
+        }
+        if (member.getTotalReformCount() >= 5) {
+            achievements.add(AchievementResponseDto.builder()
+                    .titleName("맥가이버")
+                    .iconUrl("⚒️")
+                    .build());
+        }
+        if (serviceMatchRepository.countByMember_UserId(userId) >= 3) {
+            achievements.add(AchievementResponseDto.builder()
+                    .titleName("공방 단골손님")
+                    .iconUrl("🤝")
+                    .build());
+        }
+        if (member.getTotalDisposalCount() >= 5) {
+            achievements.add(AchievementResponseDto.builder()
+                    .titleName("분리배출의 신")
+                    .iconUrl("📍")
+                    .build());
+        }
 
         return MemberResponseDto.builder()
                 .userId(member.getUserId())
                 .nickname(member.getNickname())
                 .totalXp(member.getTotalXp())
                 .currentLevel(member.getCurrentLevel())
+                .titleName(titleName)
                 .totalReformCount(member.getTotalReformCount())
                 .totalDisposalCount(member.getTotalDisposalCount())
                 .achievements(achievements)
