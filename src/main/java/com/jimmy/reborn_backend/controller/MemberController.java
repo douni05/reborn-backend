@@ -6,7 +6,9 @@ import com.jimmy.reborn_backend.dto.MemberResponseDto;
 import com.jimmy.reborn_backend.global.jwt.JwtUtil;
 import com.jimmy.reborn_backend.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/members")
@@ -15,6 +17,12 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtUtil jwtUtil;
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Void> checkEmail(@RequestParam String email) {
+        boolean exists = memberService.existsByEmail(email);
+        return exists ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    }
 
     @PostMapping("/join")
     public JoinResponseDto join(@RequestBody MemberRequestDto dto) {
@@ -26,5 +34,22 @@ public class MemberController {
             @RequestHeader("Authorization") String authorization) {
         Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
         return memberService.getProfile(userId);
+    }
+
+    @PatchMapping("/nickname")
+    public ResponseEntity<Void> updateNickname(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody Map<String, String> body) {
+        Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
+        memberService.updateNickname(userId, body.get("nickname"));
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdraw(
+            @RequestHeader("Authorization") String authorization) {
+        Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
+        memberService.withdraw(userId);
+        return ResponseEntity.noContent().build();
     }
 }

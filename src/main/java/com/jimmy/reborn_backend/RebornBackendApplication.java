@@ -3,8 +3,10 @@ package com.jimmy.reborn_backend;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
-@EnableJpaAuditing // 추가: 생성 시간 자동 기록 활성화
+@EnableJpaAuditing
+@EnableScheduling
 @SpringBootApplication
 public class RebornBackendApplication {
 	public static void main(String[] args) {

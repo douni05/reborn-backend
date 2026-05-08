@@ -27,6 +27,32 @@ public class MemberService {
     private final ServiceMatchRepository serviceMatchRepository;
     private final JwtUtil jwtUtil;
 
+    public boolean existsByEmail(String email) {
+        return memberRepository.findByEmail(email).isPresent();
+    }
+
+    @Transactional
+    public void updateNickname(Long userId, String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("닉네임을 입력해주세요.");
+        }
+        if (nickname.length() < 2 || nickname.length() > 8) {
+            throw new IllegalArgumentException("닉네임은 2자 이상 8자 이하로 입력해주세요.");
+        }
+        if (memberRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임이에요.");
+        }
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저예요."));
+        member.updateNickname(nickname);
+    }
+
+    @Transactional
+    public void withdraw(Long userId) {
+        memberRepository.deleteById(userId);
+    }
+
+
     @Transactional
     public JoinResponseDto join(MemberRequestDto dto) {
         Member member = memberRepository.findByEmail(dto.getEmail())

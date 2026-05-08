@@ -25,6 +25,10 @@ public class Member extends BaseTimeEntity {
     @Builder.Default private Float carbonReduction = 0.0f;
     private String role; // USER, EXPERT
 
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public void updateXpAndLevel(int totalXp, int currentLevel) {
         this.totalXp = totalXp;
         this.currentLevel = currentLevel;
