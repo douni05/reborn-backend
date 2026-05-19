@@ -14,8 +14,6 @@ public class ExpertListItemDto {
     private String introduction;
     private String imageUrl;
     private String phone;
-    private Double averageRating;
-    private Long reviewCount;
     private Double latitude;
     private Double longitude;
 }

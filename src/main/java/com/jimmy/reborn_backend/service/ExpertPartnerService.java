@@ -4,7 +4,6 @@ import com.jimmy.reborn_backend.domain.entity.ExpertPartner;
 import com.jimmy.reborn_backend.domain.entity.Member;
 import com.jimmy.reborn_backend.domain.repository.ExpertPartnerRepository;
 import com.jimmy.reborn_backend.domain.repository.MemberRepository;
-import com.jimmy.reborn_backend.domain.repository.ReviewRepository;
 import com.jimmy.reborn_backend.dto.ExpertListItemDto;
 import com.jimmy.reborn_backend.dto.ExpertMyInfoDto;
 import com.jimmy.reborn_backend.dto.ExpertRegisterRequestDto;
@@ -22,7 +21,6 @@ public class ExpertPartnerService {
 
     private final ExpertPartnerRepository expertPartnerRepository;
     private final MemberRepository memberRepository;
-    private final ReviewRepository reviewRepository;
 
     @Transactional
     public ExpertRegisterResponseDto register(Long userId, ExpertRegisterRequestDto dto) {
@@ -76,8 +74,6 @@ public class ExpertPartnerService {
                         .introduction(e.getIntroduction())
                         .imageUrl(e.getImageUrl())
                         .phone(e.getPhone())
-                        .averageRating(reviewRepository.getAverageRatingByShopId(e.getShopId()))
-                        .reviewCount(reviewRepository.countByExpert_ShopId(e.getShopId()))
                         .latitude(e.getLatitude() != null ? e.getLatitude().doubleValue() : null)
                         .longitude(e.getLongitude() != null ? e.getLongitude().doubleValue() : null)
                         .build())
