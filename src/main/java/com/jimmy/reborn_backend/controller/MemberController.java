@@ -3,12 +3,12 @@ package com.jimmy.reborn_backend.controller;
 import com.jimmy.reborn_backend.dto.JoinResponseDto;
 import com.jimmy.reborn_backend.dto.MemberRequestDto;
 import com.jimmy.reborn_backend.dto.MemberResponseDto;
+import com.jimmy.reborn_backend.dto.NicknameUpdateDto;
 import com.jimmy.reborn_backend.global.jwt.JwtUtil;
 import com.jimmy.reborn_backend.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/members")
@@ -39,9 +39,9 @@ public class MemberController {
     @PatchMapping("/nickname")
     public ResponseEntity<Void> updateNickname(
             @RequestHeader("Authorization") String authorization,
-            @RequestBody Map<String, String> body) {
+            @RequestBody NicknameUpdateDto dto) {
         Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
-        memberService.updateNickname(userId, body.get("nickname"));
+        memberService.updateNickname(userId, dto.getNickname());
         return ResponseEntity.ok().build();
     }
 

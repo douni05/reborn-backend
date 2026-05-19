@@ -4,7 +4,6 @@ import com.jimmy.reborn_backend.domain.entity.Achievement;
 import com.jimmy.reborn_backend.domain.entity.Member;
 import com.jimmy.reborn_backend.domain.repository.AchievementRepository;
 import com.jimmy.reborn_backend.domain.repository.MemberRepository;
-import com.jimmy.reborn_backend.domain.repository.ServiceMatchRepository;
 import com.jimmy.reborn_backend.dto.AchievementResponseDto;
 import com.jimmy.reborn_backend.dto.JoinResponseDto;
 import com.jimmy.reborn_backend.dto.MemberRequestDto;
@@ -24,7 +23,6 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final AchievementRepository achievementRepository;
-    private final ServiceMatchRepository serviceMatchRepository;
     private final JwtUtil jwtUtil;
 
     public boolean existsByEmail(String email) {
@@ -106,7 +104,7 @@ public class MemberService {
                     .iconUrl("⚒️")
                     .build());
         }
-        if (serviceMatchRepository.countByMember_UserId(userId) >= 3) {
+        if (member.getTotalExpertConnectionCount() >= 3) {
             achievements.add(AchievementResponseDto.builder()
                     .titleName("공방 단골손님")
                     .iconUrl("🤝")
@@ -127,6 +125,7 @@ public class MemberService {
                 .titleName(titleName)
                 .totalReformCount(member.getTotalReformCount())
                 .totalDisposalCount(member.getTotalDisposalCount())
+                .expertConnectionCount(member.getTotalExpertConnectionCount())
                 .achievements(achievements)
                 .build();
     }

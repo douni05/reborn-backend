@@ -16,4 +16,6 @@ public class ExpertMyInfoDto {
     private String category;
     private String introduction;
     private String imageUrl;
+    private Double latitude;
+    private Double longitude;
 }

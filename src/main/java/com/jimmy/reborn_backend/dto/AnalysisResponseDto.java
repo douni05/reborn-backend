@@ -24,4 +24,7 @@ public class AnalysisResponseDto {
     // 리폼 불가능할 때 — 분리배출 정보
     private String disposalIcon;
     private String disposalMethod;
+
+    // 히스토리 표시용
+    private String createdAt;
 }

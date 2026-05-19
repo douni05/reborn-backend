@@ -1,6 +1,7 @@
 package com.jimmy.reborn_backend.controller;
 
 import com.jimmy.reborn_backend.dto.ReviewCreateDto;
+import com.jimmy.reborn_backend.dto.ShopReviewResponseDto;
 import com.jimmy.reborn_backend.global.jwt.JwtUtil;
 import com.jimmy.reborn_backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class ReviewController {
     }
 
     @GetMapping("/shop/{shopId}")
-    public Map<String, Object> getShopReviews(@PathVariable Long shopId) {
+    public ShopReviewResponseDto getShopReviews(@PathVariable Long shopId) {
         return reviewService.getShopReviews(shopId);
     }
 

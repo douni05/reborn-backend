@@ -19,7 +19,7 @@ public class ServiceMatch extends BaseTimeEntity {
     private ExpertPartner expertPartner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_id")
+    @JoinColumn(name = "plan_id", nullable = true)
     private ReformPlan reformPlan;
 
     private String status; // REQUEST, WORKING, COMPLETED

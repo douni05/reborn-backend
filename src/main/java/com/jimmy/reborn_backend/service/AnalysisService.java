@@ -34,7 +34,8 @@ public class AnalysisService {
     private final XpService xpService;
     private final RestTemplate restTemplate;
 
-    private static final String FASTAPI_URL = "http://127.0.0.1:8000/analyze-v2";
+    @org.springframework.beans.factory.annotation.Value("${ai.server.url:http://localhost:8000}")
+    private String aiServerUrl;
 
     @Transactional
     public AnalysisResponseDto analyzeClothing(Long userId, AnalysisRequestDto dto) {
@@ -98,6 +99,9 @@ public class AnalysisService {
                 .build();
     }
 
+    private static final java.time.format.DateTimeFormatter HISTORY_FMT =
+            java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
     public List<AnalysisResponseDto> getHistory(Long userId) {
         return analysisHistoryRepository.findAllByMember_UserId(userId)
                 .stream()
@@ -114,6 +118,11 @@ public class AnalysisService {
                             .reformTitle(h.getReformTitle())
                             .reformPlan(h.getReformPlan())
                             .difficulty(h.getDifficulty())
+                            .materials(h.getMaterials())
+                            .estimatedTime(h.getEstimatedTime())
+                            .estimatedCost(h.getEstimatedCost())
+                            .createdAt(h.getCreatedAt() != null
+                                    ? h.getCreatedAt().format(HISTORY_FMT) : "")
                             .build();
                 })
                 .toList();
@@ -171,7 +180,7 @@ public class AnalysisService {
             HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
             ResponseEntity<FastApiResponseDto> response = restTemplate.exchange(
-                    FASTAPI_URL, HttpMethod.POST, request, FastApiResponseDto.class);
+                    aiServerUrl + "/analyze-v2", HttpMethod.POST, request, FastApiResponseDto.class);
 
             log.info("FastAPI 응답: {}", response.getBody());
             return response.getBody();

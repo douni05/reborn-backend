@@ -10,13 +10,13 @@ import com.jimmy.reborn_backend.domain.repository.ReformRequestRepository;
 import com.jimmy.reborn_backend.domain.repository.ReviewRepository;
 import com.jimmy.reborn_backend.dto.ReviewCreateDto;
 import com.jimmy.reborn_backend.dto.ReviewResponseDto;
+import com.jimmy.reborn_backend.dto.ShopReviewResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +55,7 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> getShopReviews(Long shopId) {
+    public ShopReviewResponseDto getShopReviews(Long shopId) {
         List<Review> reviews = reviewRepository.findByExpert_ShopIdOrderByCreatedAtDesc(shopId);
         Double avg = reviewRepository.getAverageRatingByShopId(shopId);
         long count = reviewRepository.countByExpert_ShopId(shopId);
@@ -70,11 +70,11 @@ public class ReviewService {
                         .build())
                 .collect(Collectors.toList());
 
-        return Map.of(
-                "averageRating", avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0,
-                "reviewCount", count,
-                "reviews", list
-        );
+        return ShopReviewResponseDto.builder()
+                .averageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0)
+                .reviewCount(count)
+                .reviews(list)
+                .build();
     }
 
     @Transactional(readOnly = true)

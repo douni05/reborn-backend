@@ -15,8 +15,9 @@ public class ActionController {
     private final XpService xpService;
     private final JwtUtil jwtUtil;
 
-    @PostMapping("/reform/{userId}")
-    public Map<String, Object> completeReform(@PathVariable Long userId) {
+    @PostMapping("/reform")
+    public Map<String, Object> completeReform(@RequestHeader("Authorization") String authorization) {
+        Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
         int totalXp = xpService.addXpForReform(userId);
         return Map.of(
                 "message", "리폼 완료! 폭죽 이펙트 🎉",
@@ -24,8 +25,9 @@ public class ActionController {
                 "totalXp", totalXp);
     }
 
-    @PostMapping("/disposal/{userId}")
-    public Map<String, Object> completeDisposal(@PathVariable Long userId) {
+    @PostMapping("/disposal")
+    public Map<String, Object> completeDisposal(@RequestHeader("Authorization") String authorization) {
+        Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
         int totalXp = xpService.addXpForDisposal(userId);
         return Map.of(
                 "message", "분리배출 완료! 체크 표시 ✅",
@@ -33,8 +35,9 @@ public class ActionController {
                 "totalXp", totalXp);
     }
 
-    @PostMapping("/match/{userId}")
-    public Map<String, Object> completeMatch(@PathVariable Long userId) {
+    @PostMapping("/match")
+    public Map<String, Object> completeMatch(@RequestHeader("Authorization") String authorization) {
+        Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
         int totalXp = xpService.addXpForMatch(userId);
         return Map.of(
                 "message", "전문가 매칭 완료! 로컬 상생 🤝",

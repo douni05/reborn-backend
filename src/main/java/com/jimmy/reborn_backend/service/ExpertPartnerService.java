@@ -44,6 +44,8 @@ public class ExpertPartnerService {
                 .category(dto.getCategory())
                 .introduction(dto.getIntroduction())
                 .imageUrl(dto.getImageUrl())
+                .latitude(dto.getLatitude() != null ? java.math.BigDecimal.valueOf(dto.getLatitude()) : null)
+                .longitude(dto.getLongitude() != null ? java.math.BigDecimal.valueOf(dto.getLongitude()) : null)
                 .build());
 
         return ExpertRegisterResponseDto.builder()
@@ -76,6 +78,8 @@ public class ExpertPartnerService {
                         .phone(e.getPhone())
                         .averageRating(reviewRepository.getAverageRatingByShopId(e.getShopId()))
                         .reviewCount(reviewRepository.countByExpert_ShopId(e.getShopId()))
+                        .latitude(e.getLatitude() != null ? e.getLatitude().doubleValue() : null)
+                        .longitude(e.getLongitude() != null ? e.getLongitude().doubleValue() : null)
                         .build())
                 .collect(Collectors.toList());
     }
@@ -114,6 +118,8 @@ public class ExpertPartnerService {
                 .category(e.getCategory())
                 .introduction(e.getIntroduction())
                 .imageUrl(e.getImageUrl())
+                .latitude(e.getLatitude() != null ? e.getLatitude().doubleValue() : null)
+                .longitude(e.getLongitude() != null ? e.getLongitude().doubleValue() : null)
                 .build();
     }
 }

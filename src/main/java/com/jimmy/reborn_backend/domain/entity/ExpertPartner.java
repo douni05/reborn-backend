@@ -45,5 +45,11 @@ public class ExpertPartner {
         if (dto.getImageUrl() != null) {
             this.imageUrl = dto.getImageUrl();
         }
+        if (dto.getLatitude() != null) {
+            this.latitude = java.math.BigDecimal.valueOf(dto.getLatitude());
+        }
+        if (dto.getLongitude() != null) {
+            this.longitude = java.math.BigDecimal.valueOf(dto.getLongitude());
+        }
     }
 }

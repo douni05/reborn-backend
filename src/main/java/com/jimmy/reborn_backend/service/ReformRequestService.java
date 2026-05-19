@@ -65,30 +65,37 @@ public class ReformRequestService {
 
     @Transactional
     public void acceptRequest(Long expertUserId, Long requestId, String message) {
-        ExpertPartner expert = expertPartnerRepository.findByMember_UserId(expertUserId)
-                .orElseThrow(() -> new IllegalArgumentException("전문가로 등록되어 있지 않아요"));
-        ReformRequest request = reformRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("요청을 찾을 수 없어요"));
-        if (!request.getExpert().getShopId().equals(expert.getShopId())) {
-            throw new IllegalArgumentException("권한이 없습니다");
-        }
+        ReformRequest request = getVerifiedRequest(expertUserId, requestId);
         request.accept(message);
     }
 
     @Transactional
     public void rejectRequest(Long expertUserId, Long requestId, String message) {
-        ExpertPartner expert = expertPartnerRepository.findByMember_UserId(expertUserId)
-                .orElseThrow(() -> new IllegalArgumentException("전문가로 등록되어 있지 않아요"));
-        ReformRequest request = reformRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("요청을 찾을 수 없어요"));
-        if (!request.getExpert().getShopId().equals(expert.getShopId())) {
-            throw new IllegalArgumentException("권한이 없습니다");
-        }
+        ReformRequest request = getVerifiedRequest(expertUserId, requestId);
         request.reject(message);
     }
 
     @Transactional
     public void completeRequest(Long expertUserId, Long requestId) {
+        ReformRequest request = getVerifiedRequest(expertUserId, requestId);
+
+        // 완료 처리
+        request.complete();
+
+        // 요청자에게 XP +150 지급 + 전문가 연결 카운트 증가
+        Member requester = request.getRequester();
+        xpService.addXpForMatch(requester.getUserId());
+        requester.incrementExpertConnectionCount();
+
+        // 전문가 연결 기록 저장 (이력 보관용)
+        serviceMatchRepository.save(ServiceMatch.builder()
+                .member(requester)
+                .expertPartner(request.getExpert())
+                .status("COMPLETED")
+                .build());
+    }
+
+    private ReformRequest getVerifiedRequest(Long expertUserId, Long requestId) {
         ExpertPartner expert = expertPartnerRepository.findByMember_UserId(expertUserId)
                 .orElseThrow(() -> new IllegalArgumentException("전문가로 등록되어 있지 않아요"));
         ReformRequest request = reformRequestRepository.findById(requestId)
@@ -96,20 +103,7 @@ public class ReformRequestService {
         if (!request.getExpert().getShopId().equals(expert.getShopId())) {
             throw new IllegalArgumentException("권한이 없습니다");
         }
-
-        // 완료 처리
-        request.complete();
-
-        // 요청자에게 XP +150 지급
-        Member requester = request.getRequester();
-        xpService.addXpForMatch(requester.getUserId());
-
-        // 전문가 연결 기록 저장 (공방 단골손님 칭호 카운트용)
-        serviceMatchRepository.save(ServiceMatch.builder()
-                .member(requester)
-                .expertPartner(expert)
-                .status("COMPLETED")
-                .build());
+        return request;
     }
 
     @Transactional(readOnly = true)

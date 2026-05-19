@@ -16,4 +16,6 @@ public class ExpertListItemDto {
     private String phone;
     private Double averageRating;
     private Long reviewCount;
+    private Double latitude;
+    private Double longitude;
 }

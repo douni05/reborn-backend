@@ -22,7 +22,7 @@ public class Member extends BaseTimeEntity {
     @Builder.Default private Integer currentLevel = 1;
     @Builder.Default private Integer totalReformCount = 0;
     @Builder.Default private Integer totalDisposalCount = 0;
-    @Builder.Default private Float carbonReduction = 0.0f;
+    @Builder.Default private Integer totalExpertConnectionCount = 0;
     private String role; // USER, EXPERT
 
     public void updateNickname(String nickname) {
@@ -40,6 +40,10 @@ public class Member extends BaseTimeEntity {
 
     public void incrementDisposalCount() {
         this.totalDisposalCount += 1;
+    }
+
+    public void incrementExpertConnectionCount() {
+        this.totalExpertConnectionCount += 1;
     }
 }
 
