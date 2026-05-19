@@ -24,9 +24,14 @@ public class Member extends BaseTimeEntity {
     @Builder.Default private Integer totalDisposalCount = 0;
     @Builder.Default private Integer totalExpertConnectionCount = 0;
     private String role; // USER, EXPERT
+    private String titleName; // 사용자가 선택한 칭호 (null이면 레벨 기반 기본 칭호)
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void updateTitle(String titleName) {
+        this.titleName = titleName;
     }
 
     public void updateXpAndLevel(int totalXp, int currentLevel) {

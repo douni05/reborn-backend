@@ -30,6 +30,20 @@ public class ReformRequest {
     @Column(length = 1000)
     private String requestContent;
 
+    // 리폼 솔루션 정보 (사용자가 선택한 AI 분석 결과)
+    private Long planId;
+
+    @Column(length = 2000)
+    private String reformPlan;
+
+    private String difficulty;
+
+    @Column(length = 500)
+    private String materials;
+
+    private String estimatedTime;
+    private String estimatedCost;
+
     @Enumerated(EnumType.STRING)
     private RequestStatus status;
 

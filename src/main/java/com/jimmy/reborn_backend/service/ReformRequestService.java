@@ -44,6 +44,12 @@ public class ReformRequestService {
                 .expert(expert)
                 .designTitle(dto.getDesignTitle())
                 .requestContent(dto.getRequestContent())
+                .planId(dto.getPlanId())
+                .reformPlan(dto.getReformPlan())
+                .difficulty(dto.getDifficulty())
+                .materials(dto.getMaterials())
+                .estimatedTime(dto.getEstimatedTime())
+                .estimatedCost(dto.getEstimatedCost())
                 .build());
 
         return toDto(request);
@@ -139,6 +145,12 @@ public class ReformRequestService {
                 .status(r.getStatus().name())
                 .expertMessage(r.getExpertMessage())
                 .createdAt(r.getCreatedAt() != null ? r.getCreatedAt().format(FORMATTER) : "")
+                .planId(r.getPlanId())
+                .reformPlan(r.getReformPlan())
+                .difficulty(r.getDifficulty())
+                .materials(r.getMaterials())
+                .estimatedTime(r.getEstimatedTime())
+                .estimatedCost(r.getEstimatedCost())
                 .build();
     }
 }

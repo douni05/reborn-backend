@@ -4,6 +4,7 @@ import com.jimmy.reborn_backend.dto.JoinResponseDto;
 import com.jimmy.reborn_backend.dto.MemberRequestDto;
 import com.jimmy.reborn_backend.dto.MemberResponseDto;
 import com.jimmy.reborn_backend.dto.NicknameUpdateDto;
+import com.jimmy.reborn_backend.dto.TitleUpdateDto;
 import com.jimmy.reborn_backend.global.jwt.JwtUtil;
 import com.jimmy.reborn_backend.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,15 @@ public class MemberController {
             @RequestBody NicknameUpdateDto dto) {
         Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
         memberService.updateNickname(userId, dto.getNickname());
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/title")
+    public ResponseEntity<Void> updateTitle(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody TitleUpdateDto dto) {
+        Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
+        memberService.updateTitle(userId, dto.getTitleName());
         return ResponseEntity.ok().build();
     }
 

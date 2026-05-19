@@ -30,6 +30,16 @@ public class MemberService {
     }
 
     @Transactional
+    public void updateTitle(Long userId, String titleName) {
+        if (titleName == null || titleName.isBlank()) {
+            throw new IllegalArgumentException("칭호를 입력해주세요.");
+        }
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저예요."));
+        member.updateTitle(titleName);
+    }
+
+    @Transactional
     public void updateNickname(Long userId, String nickname) {
         if (nickname == null || nickname.isBlank()) {
             throw new IllegalArgumentException("닉네임을 입력해주세요.");
@@ -80,7 +90,10 @@ public class MemberService {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저예요."));
 
-        String titleName = XpService.getTitleForLevel(member.getCurrentLevel());
+        // 저장된 칭호 우선, 없으면 레벨 기반 기본 칭호
+        String titleName = (member.getTitleName() != null && !member.getTitleName().isBlank())
+                ? member.getTitleName()
+                : XpService.getTitleForLevel(member.getCurrentLevel());
 
         // 레벨 기반 업적 (달성한 칭호 전환 마일스톤)
         List<AchievementResponseDto> achievements = new ArrayList<>(
