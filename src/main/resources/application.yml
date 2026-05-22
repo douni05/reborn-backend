@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: optional:classpath:application-local.yml
+
   datasource:
     url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
