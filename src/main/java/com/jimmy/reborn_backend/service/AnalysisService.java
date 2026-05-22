@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class AnalysisService {
         Member member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저예요. id=" + userId));
 
-        FastApiResponseDto aiResult = callFastApi(dto.getLabel());
+        FastApiResponseDto aiResult = callFastApi(dto.getLabel(), dto.getImageBase64());
 
         String materialType = aiResult.getMaterialType() != null
                 ? aiResult.getMaterialType().toLowerCase()
@@ -171,12 +172,16 @@ public class AnalysisService {
                 .build();
     }
 
-    private FastApiResponseDto callFastApi(String label) {
+    private FastApiResponseDto callFastApi(String label, String imageBase64) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            Map<String, String> body = Map.of("label", label);
+            Map<String, String> body = new HashMap<>();
+            body.put("label", label);
+            if (imageBase64 != null && !imageBase64.isBlank()) {
+                body.put("imageBase64", imageBase64);
+            }
             HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
             ResponseEntity<FastApiResponseDto> response = restTemplate.exchange(
