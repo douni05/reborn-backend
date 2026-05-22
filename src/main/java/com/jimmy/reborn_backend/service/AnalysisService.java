@@ -85,6 +85,7 @@ public class AnalysisService {
 
         return AnalysisResponseDto.builder()
                 .analysisId(saved.getAnalysisId())
+                .label(dto.getLabel())
                 .materialType(aiResult.getMaterialType())
                 .conditionGrade(aiResult.getConditionGrade())
                 .isReformable(isReformable)

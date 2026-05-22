@@ -8,6 +8,7 @@ import lombok.Getter;
 public class AnalysisResponseDto {
 
     private Long analysisId;
+    private String label;
     private String materialType;
     private String conditionGrade;
     private Boolean isReformable;
