@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?user=postgres.hxtdbbwfknqncekqdggq&password=jimmyreborn202444&prepareThreshold=0
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 메타데이터 접근 시의 인증 에러를 방지하는 핵심 옵션입니다.
+        temp.use_jdbc_metadata_defaults: false
+        format_sql: true
+
+jwt:
+  secret: reborn-secret-key-jimmy-team-2024-very-long-secret
+  expiration: 86400000
+
+ai:
+  server:
+    url: http://localhost:8000
+
+server:
+  port: 8080
+
+springdoc:
+  default-consume-media-type: application/json
+  default-produce-media-type: application/json
+  swagger-ui:
+    path: /swagger-ui.html      # 접속 주소 (http://localhost:8080/swagger-ui.html)
+    disable-swagger-default-url: true
+    display-request-duration: true
+  api-docs:
+    path: /v3/api-docs

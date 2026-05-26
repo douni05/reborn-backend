@@ -1,0 +1,44 @@
+spring:
+  config:
+    import: optional:classpath:application-local.yml
+
+  datasource:
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
+    username: postgres.hxtdbbwfknqncekqdggq
+    password: "jimmyreborn44**"
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp.use_jdbc_metadata_defaults: false
+        format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:reborn-secret-key-1234567890abcdefghijklmnop}
+  expiration: 86400000
+
+ai:
+  server:
+    url: ${AI_SERVER_URL:http://localhost:8000}
+
+server:
+  port: 8080
+
+springdoc:
+  default-consume-media-type: application/json
+  default-produce-media-type: application/json
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    display-request-duration: true
+  api-docs:
+    path: /v3/api-docs
+
+firebase:
+  config:
+    path: reborn-2c50e-firebase-adminsdk-fbsvc-a4db0c1b7b.json
