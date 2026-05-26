@@ -28,4 +28,8 @@ public class AnalysisResponseDto {
 
     // 히스토리 표시용
     private String createdAt;
+
+    // 완료 여부
+    private Boolean isDisposalCompleted;
+    private Boolean isReformVerified;
 }

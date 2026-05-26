@@ -19,6 +19,7 @@ public class FastApiResponseDto {
     private String materials;      // 필요한 재료
     private String estimatedTime;  // 예상 소요 시간
     private String estimatedCost;  // 예상 비용
+    private String disposalGuide;  // AI가 생성한 분리배출 가이드 (재질 DB 없을 때 폴백용)
 
     // FastAPI 없을 때 fallback용 생성자
     public FastApiResponseDto(String label, String materialType,

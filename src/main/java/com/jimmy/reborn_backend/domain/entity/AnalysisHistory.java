@@ -27,4 +27,19 @@ public class AnalysisHistory extends BaseTimeEntity {
     private String materials;
     private String estimatedTime;
     private String estimatedCost;
+
+    private String disposalIcon;
+    @Column(columnDefinition = "TEXT")
+    private String disposalMethod;
+
+    private Boolean isDisposalCompleted;
+    private Boolean isReformVerified;
+
+    public void markDisposalCompleted() {
+        this.isDisposalCompleted = true;
+    }
+
+    public void markReformVerified() {
+        this.isReformVerified = true;
+    }
 }

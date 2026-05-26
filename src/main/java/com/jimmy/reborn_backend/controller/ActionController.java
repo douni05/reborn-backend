@@ -1,10 +1,13 @@
 package com.jimmy.reborn_backend.controller;
 
+import com.jimmy.reborn_backend.domain.entity.AnalysisHistory;
+import com.jimmy.reborn_backend.domain.repository.AnalysisHistoryRepository;
 import com.jimmy.reborn_backend.global.jwt.JwtUtil;
 import com.jimmy.reborn_backend.service.XpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +22,7 @@ public class ActionController {
     private final XpService xpService;
     private final JwtUtil jwtUtil;
     private final RestTemplate restTemplate;
+    private final AnalysisHistoryRepository analysisHistoryRepository;
 
     @Value("${ai.server.url:http://localhost:8000}")
     private String aiServerUrl;
@@ -33,9 +37,22 @@ public class ActionController {
                 "totalXp", totalXp);
     }
 
+    @Transactional
     @PostMapping("/disposal")
-    public Map<String, Object> completeDisposal(@RequestHeader("Authorization") String authorization) {
+    public Map<String, Object> completeDisposal(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody(required = false) Map<String, Object> body) {
         Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
+
+        // analysisId가 있으면 해당 분석에 배출 완료 표시
+        if (body != null && body.get("analysisId") != null) {
+            Long analysisId = Long.valueOf(body.get("analysisId").toString());
+            analysisHistoryRepository.findById(analysisId).ifPresent(h -> {
+                h.markDisposalCompleted();
+                analysisHistoryRepository.save(h);
+            });
+        }
+
         int totalXp = xpService.addXpForDisposal(userId);
         return Map.of(
                 "message", "분리배출 완료! 체크 표시 ✅",
@@ -53,6 +70,7 @@ public class ActionController {
                 "totalXp", totalXp);
     }
 
+    @Transactional
     @PostMapping("/reform-verify")
     public Map<String, Object> verifyReform(
             @RequestHeader("Authorization") String authorization,
@@ -61,6 +79,7 @@ public class ActionController {
         Long userId = jwtUtil.getUserId(authorization.replace("Bearer ", ""));
         String imageBase64 = body.get("imageBase64");
         String label = body.getOrDefault("label", "");
+        String analysisIdStr = body.get("analysisId");
 
         if (imageBase64 == null || imageBase64.isBlank()) {
             return Map.of("isVerified", false, "message", "이미지가 없어요.", "earnedXp", 0, "totalXp", 0);
@@ -84,6 +103,14 @@ public class ActionController {
             String message = aiResult != null ? (String) aiResult.get("message") : "검증 실패";
 
             if (isVerified) {
+                // analysisId가 있으면 리폼 인증 완료 표시
+                if (analysisIdStr != null && !analysisIdStr.isBlank()) {
+                    Long analysisId = Long.valueOf(analysisIdStr);
+                    analysisHistoryRepository.findById(analysisId).ifPresent(h -> {
+                        h.markReformVerified();
+                        analysisHistoryRepository.save(h);
+                    });
+                }
                 int totalXp = xpService.addXpForReform(userId);
                 return Map.of(
                         "isVerified", true,

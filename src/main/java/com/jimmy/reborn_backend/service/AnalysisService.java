@@ -47,11 +47,36 @@ public class AnalysisService {
 
         String materialType = aiResult.getMaterialType() != null
                 ? aiResult.getMaterialType().toLowerCase()
-                : "default";
+                : "";
 
-        DisposalGuide guide = disposalGuideRepository
+        // exact match만 사용 (default 폴백 없이)
+        DisposalGuide exactGuide = disposalGuideRepository
                 .findByMaterialType(materialType)
-                .orElseGet(() -> disposalGuideRepository.findByMaterialType("default").orElse(null));
+                .orElse(null);
+
+        // 우선순위: ① DB exact match → ② AI disposalGuide → ③ DB default → ④ 하드코딩 폴백
+        String disposalIcon;
+        String disposalMethod;
+        boolean hasExactGuide = exactGuide != null
+                && exactGuide.getDischargeMethod() != null
+                && !exactGuide.getDischargeMethod().isBlank();
+
+        if (hasExactGuide) {
+            disposalIcon = exactGuide.getCategoryIcon() != null ? exactGuide.getCategoryIcon() : "🗑️";
+            disposalMethod = exactGuide.getDischargeMethod();
+            log.info("DB exact match 사용: materialType={}", materialType);
+        } else if (aiResult.getDisposalGuide() != null && !aiResult.getDisposalGuide().isBlank()) {
+            disposalIcon = "🗑️";
+            disposalMethod = aiResult.getDisposalGuide();
+            log.info("AI disposalGuide 사용: materialType={}", materialType);
+        } else {
+            DisposalGuide defaultGuide = disposalGuideRepository.findByMaterialType("default").orElse(null);
+            disposalIcon = defaultGuide != null ? defaultGuide.getCategoryIcon() : "🗑️";
+            disposalMethod = defaultGuide != null && defaultGuide.getDischargeMethod() != null
+                    ? defaultGuide.getDischargeMethod()
+                    : "step1: 재질을 확인하세요\nstep2: 해당 분리배출함에 배출하세요";
+            log.info("DB default/hardcoded 폴백 사용: materialType={}", materialType);
+        }
 
         AnalysisHistory history = AnalysisHistory.builder()
                 .member(member)
@@ -64,6 +89,8 @@ public class AnalysisService {
                 .materials(aiResult.getMaterials())
                 .estimatedTime(aiResult.getEstimatedTime())
                 .estimatedCost(aiResult.getEstimatedCost())
+                .disposalIcon(disposalIcon)
+                .disposalMethod(disposalMethod)
                 .build();
 
         AnalysisHistory saved = analysisHistoryRepository.save(history);
@@ -96,8 +123,8 @@ public class AnalysisService {
                 .materials(isReformable ? aiResult.getMaterials() : null)
                 .estimatedTime(isReformable ? aiResult.getEstimatedTime() : null)
                 .estimatedCost(isReformable ? aiResult.getEstimatedCost() : null)
-                .disposalIcon(guide != null ? guide.getCategoryIcon() : null)
-                .disposalMethod(guide != null ? guide.getDischargeMethod() : null)
+                .disposalIcon(disposalIcon)
+                .disposalMethod(disposalMethod)
                 .build();
     }
 
@@ -105,7 +132,7 @@ public class AnalysisService {
             java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
     public List<AnalysisResponseDto> getHistory(Long userId) {
-        return analysisHistoryRepository.findAllByMember_UserId(userId)
+        return analysisHistoryRepository.findAllByMember_UserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(h -> {
                     Long planId = reformPlanRepository.findByAnalysis_AnalysisId(h.getAnalysisId())
@@ -125,6 +152,8 @@ public class AnalysisService {
                             .estimatedCost(h.getEstimatedCost())
                             .createdAt(h.getCreatedAt() != null
                                     ? h.getCreatedAt().format(HISTORY_FMT) : "")
+                            .isDisposalCompleted(Boolean.TRUE.equals(h.getIsDisposalCompleted()))
+                            .isReformVerified(Boolean.TRUE.equals(h.getIsReformVerified()))
                             .build();
                 })
                 .toList();
@@ -137,22 +166,32 @@ public class AnalysisService {
         boolean isReformable = Boolean.TRUE.equals(h.getIsReformable());
 
         Long planId = null;
-        String disposalIcon = null;
-        String disposalMethod = null;
 
         if (isReformable) {
             planId = reformPlanRepository.findByAnalysis_AnalysisId(analysisId)
                     .map(ReformPlan::getPlanId)
                     .orElse(null);
+        }
+
+        // 저장된 배출 정보 우선 사용, 없으면 DB 재조회
+        String disposalIcon;
+        String disposalMethod;
+        if (h.getDisposalMethod() != null && !h.getDisposalMethod().isBlank()) {
+            disposalIcon = h.getDisposalIcon() != null ? h.getDisposalIcon() : "🗑️";
+            disposalMethod = h.getDisposalMethod();
         } else {
-            String materialType = h.getMaterialType() != null
-                    ? h.getMaterialType().toLowerCase()
-                    : "default";
-            DisposalGuide guide = disposalGuideRepository.findByMaterialType(materialType)
-                    .orElseGet(() -> disposalGuideRepository.findByMaterialType("default").orElse(null));
-            if (guide != null) {
-                disposalIcon = guide.getCategoryIcon();
-                disposalMethod = guide.getDischargeMethod();
+            // 구버전 데이터 호환: DB에서 재조회
+            String materialTypeLower = h.getMaterialType() != null ? h.getMaterialType().toLowerCase() : "";
+            DisposalGuide exactGuide = disposalGuideRepository.findByMaterialType(materialTypeLower).orElse(null);
+            boolean hasExactGuide = exactGuide != null
+                    && exactGuide.getDischargeMethod() != null
+                    && !exactGuide.getDischargeMethod().isBlank();
+            if (hasExactGuide) {
+                disposalIcon = exactGuide.getCategoryIcon() != null ? exactGuide.getCategoryIcon() : "🗑️";
+                disposalMethod = exactGuide.getDischargeMethod();
+            } else {
+                disposalIcon = "🗑️";
+                disposalMethod = "step1: 재질을 확인하세요\nstep2: 해당 재질의 분리배출함에 배출하세요\nstep3: 이물질이 묻어있다면 세척 후 배출하세요";
             }
         }
 
@@ -170,6 +209,8 @@ public class AnalysisService {
                 .estimatedCost(isReformable ? h.getEstimatedCost() : null)
                 .disposalIcon(disposalIcon)
                 .disposalMethod(disposalMethod)
+                .isDisposalCompleted(Boolean.TRUE.equals(h.getIsDisposalCompleted()))
+                .isReformVerified(Boolean.TRUE.equals(h.getIsReformVerified()))
                 .build();
     }
 
