@@ -96,8 +96,8 @@ public class AnalysisService {
                 .materials(isReformable ? aiResult.getMaterials() : null)
                 .estimatedTime(isReformable ? aiResult.getEstimatedTime() : null)
                 .estimatedCost(isReformable ? aiResult.getEstimatedCost() : null)
-                .disposalIcon(!isReformable && guide != null ? guide.getCategoryIcon() : null)
-                .disposalMethod(!isReformable && guide != null ? guide.getDischargeMethod() : null)
+                .disposalIcon(guide != null ? guide.getCategoryIcon() : null)
+                .disposalMethod(guide != null ? guide.getDischargeMethod() : null)
                 .build();
     }
 
