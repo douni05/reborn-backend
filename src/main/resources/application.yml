@@ -3,9 +3,7 @@ spring:
     import: optional:classpath:application-local.yml
 
   datasource:
-    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
-    username: postgres.hxtdbbwfknqncekqdggq
-    password: "jimmyreborn44**"
+    url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,7 +17,7 @@ spring:
         format_sql: true
 
 jwt:
-  secret: ${JWT_SECRET:reborn-secret-key-1234567890abcdefghijklmnop}
+  secret: ${JWT_SECRET}
   expiration: 86400000
 
 ai:
@@ -28,6 +26,13 @@ ai:
 
 server:
   port: 8080
+  tomcat:
+    max-swallow-size: -1
+
+spring.servlet:
+  multipart:
+    max-file-size: 20MB
+    max-request-size: 20MB
 
 springdoc:
   default-consume-media-type: application/json
@@ -41,4 +46,4 @@ springdoc:
 
 firebase:
   config:
-    path: reborn-2c50e-firebase-adminsdk-fbsvc-a4db0c1b7b.json
+    path: reborn-2c50e-firebase-adminsdk-fbsvc-bf05103003.json

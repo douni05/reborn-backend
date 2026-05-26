@@ -67,6 +67,7 @@ public class MemberService {
         member.updateFcmToken(fcmToken);
     }
 
+
     @Transactional
     public JoinResponseDto join(MemberRequestDto dto) {
         Member member = memberRepository.findByEmail(dto.getEmail())

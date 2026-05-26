@@ -74,39 +74,44 @@ public class ReformRequestService {
     public void acceptRequest(Long expertUserId, Long requestId, String message) {
         ReformRequest request = getVerifiedRequest(expertUserId, requestId);
         request.accept(message);
-
-        // 알림 전송
-        String fcmToken = request.getRequester().getFcmToken();
-        fcmService.sendNotification(fcmToken, "리폼 요청 수락 🎉", "전문가가 리폼 요청을 수락했어요!");
+        fcmService.sendNotification(
+                request.getRequester().getFcmToken(),
+                "리폼 요청 수락 🎉",
+                "전문가가 리폼 요청을 수락했어요!");
     }
 
     @Transactional
     public void rejectRequest(Long expertUserId, Long requestId, String message) {
         ReformRequest request = getVerifiedRequest(expertUserId, requestId);
         request.reject(message);
-
-        // 알림 전송
-        String fcmToken = request.getRequester().getFcmToken();
-        fcmService.sendNotification(fcmToken, "리폼 요청 거절", "전문가가 리폼 요청을 거절했어요");
+        fcmService.sendNotification(
+                request.getRequester().getFcmToken(),
+                "리폼 요청 거절",
+                "전문가가 리폼 요청을 거절했어요");
     }
 
     @Transactional
     public void completeRequest(Long expertUserId, Long requestId) {
         ReformRequest request = getVerifiedRequest(expertUserId, requestId);
+
+        // 완료 처리
         request.complete();
 
+        // 요청자에게 XP +150 지급 + 전문가 연결 카운트 증가
         Member requester = request.getRequester();
         xpService.addXpForMatch(requester.getUserId());
         requester.incrementExpertConnectionCount();
+        fcmService.sendNotification(
+                requester.getFcmToken(),
+                "리폼 완료 ✅",
+                "리폼이 완료되었어요! +150 XP 획득!");
 
+        // 전문가 연결 기록 저장 (이력 보관용)
         serviceMatchRepository.save(ServiceMatch.builder()
                 .member(requester)
                 .expertPartner(request.getExpert())
                 .status("COMPLETED")
                 .build());
-
-        // 알림 전송
-        fcmService.sendNotification(requester.getFcmToken(), "리폼 완료 ✅", "리폼이 완료되었어요! +150 XP 획득!");
     }
 
     private ReformRequest getVerifiedRequest(Long expertUserId, Long requestId) {
